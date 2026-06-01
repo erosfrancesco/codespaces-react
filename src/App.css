@@ -1,12 +1,5 @@
-.App {
-  text-align: center;
-}
-
 @tailwind base;
-@tailwind components;
 @tailwind utilities;
-
-
 
 /* Main dashboard styling moved from index.html for maintainability */
 * {
@@ -403,4 +396,3 @@ body {
     padding: 40px 20px;
     font-style: italic;
 }
-

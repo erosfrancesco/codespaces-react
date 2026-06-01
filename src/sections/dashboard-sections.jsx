@@ -1,6 +1,9 @@
 import { useEffect } from "react";
-import { useWebSocketConnection } from "../utils";
-import { GPIOPinsDisplay, SerialDataDisplay, ValueDisplay, LineChartWidget } from "./dashboard-components";
+import { calcStats, useWebSocketConnection } from "../utils";
+import { GPIOPinsDisplay } from "../components/GpioPinsDisplay";
+import { ValueDisplay } from "../components/ValueDisplay";
+import { LineChartWidget } from "../components/LineChart";
+import { SerialDataDisplay } from "../components/SerialDataDisplay";
 
 
 // TODO: - Should use labeled sensors instead of hardcoded temperature/humidity
@@ -13,7 +16,7 @@ export function SensorsSection({ sensorHistory }) {
             <SectionLayout>
                 {sensors.map(sensor => {
                     const { value, ...sensorProps } = sensorHistory[sensor] || { value: [] };
-                    const { min, max, avg } = window.calcStats(value);
+                    const { min, max, avg } = calcStats(value);
                     const current = value[value.length - 1] || 0;
 
                     return <ValueDisplay
@@ -63,7 +66,9 @@ export function BoardPinoutSection({ pins, serialData, timestamp, connected }) {
     return <div className="mb-8">
         <SectionTitle>🔌 GPIO & Serial</SectionTitle>
         <SectionLayout>
-            <GPIOPinsDisplay pins={pins} timestamp={timestamp} />
+            {Object.entries(pins).map(([pin, state]) =>
+                <GPIOPinsDisplay pin={pin} state={state} timestamp={timestamp} />
+            )}
             <SerialDataDisplay serialData={serialData} timestamp={timestamp} />
         </SectionLayout>
     </div>

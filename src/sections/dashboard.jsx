@@ -63,7 +63,6 @@ export function Dashboard() {
 
             <SensorsSection sensorHistory={sensorHistory} connected={connected} />
             <ChartsSection sensorHistory={sensorHistory} />
-            {/** */}
         </div>
     );
 }

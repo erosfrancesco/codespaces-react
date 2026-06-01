@@ -1,33 +1,7 @@
 import React from "react";
 
-// Utility functions for the dashboard
 
-function getServerUrl() {
-    const stored = sessionStorage.getItem('ws_server_url');
-    if (stored) return stored;
-
-    const persistent = localStorage.getItem('ws_server_url_persistent');
-    if (persistent) return persistent;
-
-    const params = new URLSearchParams(window.location.search);
-    const paramUrl = params.get('server');
-    if (paramUrl) return paramUrl;
-
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return `${protocol}//${window.location.hostname}:8765`;
-}
-
-function getGPIOLabel(pin) {
-    const labels = {
-        '17': 'GPIO 17',
-        '27': 'GPIO 27',
-        '22': 'GPIO 22',
-        '23': 'GPIO 23'
-    };
-    return labels[pin] || `GPIO ${pin}`;
-}
-
-function calcStats(data) {
+export function calcStats(data) {
     if (!Array.isArray(data)) return { min: 0, max: 0, avg: 0 };
     if (data.length === 0) return { min: 0, max: 0, avg: 0 };
 
@@ -38,17 +12,11 @@ function calcStats(data) {
     };
 };
 
-// Make them global
-window.getServerUrl = getServerUrl;
-window.getGPIOLabel = getGPIOLabel;
-window.calcStats = calcStats;
-
-
 // Custom hook for WebSocket connection management
 export function useWebSocketConnection() {
     const [connected, setConnected] = React.useState(false);
-    const [serverUrl, setServerUrl] = React.useState(window.getServerUrl());
-    const [tempUrl, setTempUrl] = React.useState(window.getServerUrl());
+    const [serverUrl, setServerUrl] = React.useState(getServerUrl());
+    const [tempUrl, setTempUrl] = React.useState(getServerUrl());
     const [showConfig, setShowConfig] = React.useState(false);
     const [error, setError] = React.useState('');
     const ws = React.useRef(null);
@@ -139,4 +107,19 @@ export function useWebSocketConnection() {
         setShowConfig,
         setError
     };
+}
+
+function getServerUrl() {
+    const stored = sessionStorage.getItem('ws_server_url');
+    if (stored) return stored;
+
+    const persistent = localStorage.getItem('ws_server_url_persistent');
+    if (persistent) return persistent;
+
+    const params = new URLSearchParams(window.location.search);
+    const paramUrl = params.get('server');
+    if (paramUrl) return paramUrl;
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${protocol}//${window.location.hostname}:8765`;
 }
