@@ -1,0 +1,17 @@
+{
+  "ws_host": "0.0.0.0",
+  "ws_port": 8765,
+  "update_interval": 1.0,
+  "device_name": "Mock Dashboard",
+  "gpio_pins": [
+    17,
+    18,
+    27,
+    22
+  ],
+  "simulation": {
+    "temperature_enabled": true,
+    "humidity_enabled": true,
+    "pressure_enabled": true
+  }
+}
