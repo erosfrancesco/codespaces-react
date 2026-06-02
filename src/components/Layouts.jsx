@@ -13,7 +13,6 @@ export function SectionContent({ children, className }) {
     const { connected } = useWebSocketConnection();
 
     return <div className={
-        // "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 "
         "gap-5"
         + (className ? (" " + className) : "")
     }>
@@ -27,5 +26,20 @@ export function Card({ children, className }) {
         + (className ? (" " + className) : "")
     }>
         {children}
+    </div>
+}
+
+export function Dialog({ children, onClose }) {
+    return <div className="text-black fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose()
+    }}>
+        <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl" onClick={e => {
+            e.preventDefault();
+            e.stopPropagation();
+        }}>
+            {children}
+        </div>
     </div>
 }

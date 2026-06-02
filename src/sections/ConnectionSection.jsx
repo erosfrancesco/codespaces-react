@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useWebSocketConnection } from "../hooks/useWebSocket";
+import { Dialog } from "../components/Layouts";
 
 
 // Connection (WebSocket) status and configuration
@@ -55,7 +56,6 @@ function ConnectionOptions({ onClose }) {
         serverUrl,
         tempUrl,
         setTempUrl,
-        setShowConfig,
         handleConnect,
         handlePersistent,
         handleReset
@@ -66,43 +66,53 @@ function ConnectionOptions({ onClose }) {
         onClose();
     }
 
-    return <div className="text-black fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" onClick={e => e.target === e.currentTarget && setShowConfig(false)}>
-        <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Server Configuration</h2>
+    return <Dialog onClose={onClose}>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Server Configuration</h2>
 
-            {/** INPUT */}
-            <div className="mb-6">
-                <label htmlFor="server-url" className="block text-sm font-medium text-gray-700 mb-2">WebSocket Server URL</label>
-                <input
-                    id="server-url"
-                    type="text"
-                    value={tempUrl}
-                    onChange={e => setTempUrl(e.target.value)}
-                    placeholder="ws://192.168.1.100:8765"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-                />
-                <div className="text-sm text-gray-600 mt-1">Format: ws://HOST:PORT or wss://HOST:PORT (SSL)</div>
-            </div>
+        {/** INPUT */}
+        <div className="mb-6">
+            <label htmlFor="server-url" className="block text-sm font-medium text-gray-700 mb-2">WebSocket Server URL</label>
+            <input
+                id="server-url"
+                type="text"
+                value={tempUrl}
+                onChange={e => setTempUrl(e.target.value)}
+                placeholder="ws://192.168.1.100:8765"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
+            />
+            <div className="text-sm text-gray-600 mt-1">Format: ws://HOST:PORT or wss://HOST:PORT (SSL)</div>
+        </div>
 
-            {/** STATUS */}
-            <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Current Connection</label>
-                <div className="text-sm text-gray-600 mt-1">
-                    Status: {connected ? '✅ Connected' : '❌ Disconnected'}
-                    <br />
-                    URL: {serverUrl}
-                </div>
-            </div>
-
-            {/** ACTIONS */}
-            <div className="flex gap-3 mt-8">
-                <button className="flex-1 py-2 px-4 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors" onClick={() => handleButtonClick(handleConnect)}>Connect (Session)</button>
-                <button className="flex-1 py-2 px-4 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors" onClick={() => handleButtonClick(handlePersistent)}>
-                    Save & Connect
-                </button>
-                <button className="flex-1 py-2 px-4 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors" onClick={() => handleButtonClick(handleReset)}>Reset</button>
-                <button className="flex-1 py-2 px-4 bg-red-200 text-gray-800 rounded-lg font-semibold hover:bg-red-300 transition-colors" onClick={() => handleButtonClick(onClose)}>Close</button>
+        {/** STATUS */}
+        <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Current Connection</label>
+            <div className="text-sm text-gray-600 mt-1">
+                Status: {connected ? '✅ Connected' : '❌ Disconnected'}
+                <br />
+                URL: {serverUrl || tempUrl}
             </div>
         </div>
-    </div>
+
+        {/** ACTIONS */}
+        <div className="flex gap-3 mt-8">
+            <button className="flex-1 py-2 px-4 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+                onClick={() => handleButtonClick(handleConnect)}>
+                Connect (Session)
+            </button>
+            <button className="flex-1 py-2 px-4 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
+                onClick={() => handleButtonClick(handlePersistent)}>
+                Save & Connect
+            </button>
+            <button className="flex-1 py-2 px-4 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors"
+                onClick={() => handleButtonClick(handleReset)}>
+                Reset
+            </button>
+            {/*}
+            <button className="flex-1 py-2 px-4 bg-red-200 text-gray-800 rounded-lg font-semibold hover:bg-red-300 transition-colors"
+                onClick={() => handleButtonClick(onClose)}>
+                Close
+            </button>
+            {/** */}
+        </div>
+    </Dialog>
 }
