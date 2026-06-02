@@ -1,10 +1,13 @@
 import './App.css';
-import { Dashboard } from './sections/dashboard';
+import { WebSocketProvider } from './hooks/useWebSocket';
+import { Dashboard } from './sections/Dashboard';
 
 function App() {
   return (
     <div className="App">
-      <Dashboard />
+      <WebSocketProvider>
+        <Dashboard />
+      </WebSocketProvider>
     </div>
   );
 }

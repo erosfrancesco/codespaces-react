@@ -1,6 +1,9 @@
 import React, { useState } from "react";
-import { useWebSocketConnection } from "../utils";
-import { BoardPinoutSection, ChartsSection, ConnectionSection, SensorsSection } from "./dashboard-sections";
+
+import { ConnectionSection } from "./ConnectionSection";
+import { BoardPinoutSection } from "./BoardPinoutSection";
+import { SensorsSection } from "./SensorsSection";
+import { ChartsSection } from "./ChartsSection";
 
 export function Dashboard() {
     const [pins, setPins] = useState({});
@@ -9,8 +12,6 @@ export function Dashboard() {
     const [sensorHistory, setSensorHistory] = useState({
         timestamps: []
     });
-
-    const { connected } = useWebSocketConnection();
 
     const onData = data => {
         if (data.type === 'init' || data.type === 'state') {
@@ -59,9 +60,8 @@ export function Dashboard() {
     return (
         <div className="max-w-4xl mx-auto text-center">
             <ConnectionSection onData={onData} onError={onError} />
-            <BoardPinoutSection pins={pins} serialData={serialData} timestamp={timestamp} connected={connected} />
-
-            <SensorsSection sensorHistory={sensorHistory} connected={connected} />
+            <BoardPinoutSection pins={pins} serialData={serialData} timestamp={timestamp} />
+            <SensorsSection sensorHistory={sensorHistory} />
             <ChartsSection sensorHistory={sensorHistory} />
         </div>
     );

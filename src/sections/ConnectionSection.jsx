@@ -1,81 +1,8 @@
 import { useEffect } from "react";
-import { calcStats, useWebSocketConnection } from "../utils";
-import { GPIOPinsDisplay } from "../components/GpioPinsDisplay";
-import { ValueDisplay } from "../components/ValueDisplay";
-import { LineChartWidget } from "../components/LineChart";
-import { SerialDataDisplay } from "../components/SerialDataDisplay";
+import { useWebSocketConnection } from "../hooks/useWebSocket";
 
 
-// TODO: - Should use labeled sensors instead of hardcoded temperature/humidity
-export function SensorsSection({ sensorHistory }) {
-    const sensors = Object.keys(sensorHistory).filter(s => s !== 'timestamps');
-
-    return (
-        <div className="mb-8">
-            <SectionTitle>📊 Sensors & Data</SectionTitle>
-            <SectionLayout>
-                {sensors.map(sensor => {
-                    const { value, ...sensorProps } = sensorHistory[sensor] || { value: [] };
-                    const { min, max, avg } = calcStats(value);
-                    const current = value[value.length - 1] || 0;
-
-                    return <ValueDisplay
-                        key={sensor}
-                        label={sensorProps.label || sensor}
-                        value={current}
-                        unit={sensorProps.unit || ''}
-                        min={min}
-                        max={max}
-                        avg={avg}
-                    />
-                })}
-
-            </SectionLayout>
-        </div>
-    );
-}
-
-export function ChartsSection({ sensorHistory }) {
-    const sensors = Object.keys(sensorHistory).filter(s => s !== 'timestamps');
-    const colorMap = ["#667eea", "#764ba2", "#ff6a00", "#ee0979", "#56ab2f", "#a8e063"];
-
-    return (
-        <div className="mb-8">
-            <SectionTitle>📈 Charts</SectionTitle>
-            <SectionLayout>
-                {sensors.map((sensor, i) => {
-                    const { value, ...sensorProps } = sensorHistory[sensor] || {};
-                    const chartColor = colorMap[i] || colorMap[0];
-
-                    return <LineChartWidget
-                        key={sensor}
-                        label={`${sensorProps.label || sensor} (Last 60s)`}
-                        data={value || []}
-                        timestamps={sensorHistory.timestamps}
-                        color={sensorProps.color || chartColor}
-                        yLabel={sensorProps.unit || ''}
-                    />
-                })}
-            </SectionLayout>
-        </div>
-    );
-}
-
-export function BoardPinoutSection({ pins, serialData, timestamp, connected }) {
-    // TODO: - In case is not connected, show a message instead of the pinout
-    return <div className="mb-8">
-        <SectionTitle>🔌 GPIO & Serial</SectionTitle>
-        <SectionLayout>
-            {Object.entries(pins).map(([pin, state]) =>
-                <GPIOPinsDisplay pin={pin} state={state} timestamp={timestamp} />
-            )}
-            <SerialDataDisplay serialData={serialData} timestamp={timestamp} />
-        </SectionLayout>
-    </div>
-}
-
-
-// Connection (WebSocket) status and configuration component
+// Connection (WebSocket) status and configuration
 export function ConnectionSection({ onData, onError }) {
     const {
         connected,
@@ -104,17 +31,20 @@ export function ConnectionSection({ onData, onError }) {
     }, [ws]); // Re-run effect if WebSocket instance changes
 
     return <div className="text-white mb-8 text-center">
+        {/** CONTENT */}
         <h1 className="text-5xl mb-3">🎛️ Raspberry Pi Dashboard</h1>
         <div className="flex items-center justify-center gap-3 text-lg">
             <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-400 animate-pulse' : 'bg-red-500'}`}></div>
             <span>{connected ? 'Connected' : 'Disconnected'}</span>
         </div>
 
+        {/** CTA */}
         <div className="fixed bottom-5 right-5 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg text-sm font-mono cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
             onClick={() => setShowConfig(true)}>
             🔧 {serverUrl}
         </div>
 
+        {/** Dialog */}
         {showConfig && <ConnectionOptions onClose={() => setShowConfig(false)} />}
     </div>
 }
@@ -139,6 +69,8 @@ function ConnectionOptions({ onClose }) {
     return <div className="text-black fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" onClick={e => e.target === e.currentTarget && setShowConfig(false)}>
         <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Server Configuration</h2>
+
+            {/** INPUT */}
             <div className="mb-6">
                 <label htmlFor="server-url" className="block text-sm font-medium text-gray-700 mb-2">WebSocket Server URL</label>
                 <input
@@ -151,6 +83,8 @@ function ConnectionOptions({ onClose }) {
                 />
                 <div className="text-sm text-gray-600 mt-1">Format: ws://HOST:PORT or wss://HOST:PORT (SSL)</div>
             </div>
+
+            {/** STATUS */}
             <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Current Connection</label>
                 <div className="text-sm text-gray-600 mt-1">
@@ -159,6 +93,8 @@ function ConnectionOptions({ onClose }) {
                     URL: {serverUrl}
                 </div>
             </div>
+
+            {/** ACTIONS */}
             <div className="flex gap-3 mt-8">
                 <button className="flex-1 py-2 px-4 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors" onClick={() => handleButtonClick(handleConnect)}>Connect (Session)</button>
                 <button className="flex-1 py-2 px-4 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors" onClick={() => handleButtonClick(handlePersistent)}>
@@ -168,19 +104,5 @@ function ConnectionOptions({ onClose }) {
                 <button className="flex-1 py-2 px-4 bg-red-200 text-gray-800 rounded-lg font-semibold hover:bg-red-300 transition-colors" onClick={() => handleButtonClick(onClose)}>Close</button>
             </div>
         </div>
-    </div>
-}
-
-
-//
-function SectionTitle({ children }) {
-    return <div className="text-white text-2xl mb-4 font-semibold uppercase tracking-wide">
-        {children}
-    </div>
-}
-
-function SectionLayout({ children }) {
-    return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {children}
     </div>
 }
