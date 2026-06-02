@@ -3,12 +3,12 @@ import { SerialDataDisplay } from "../components/SerialDataDisplay";
 import { SectionContent, SectionTitle } from "../components/Layouts";
 
 
-export function BoardPinoutSection({ pins, serialData, timestamp }) { 
+export function BoardPinoutSection({ pins, serialData, timestamp }) {
     return <div className="mb-8">
         <SectionTitle>🔌 GPIO & Serial</SectionTitle>
-        <SectionContent>
+        <SectionContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {Object.entries(pins).map(([pin, state]) =>
-                <GPIOPinsDisplay pin={pin} state={state} timestamp={timestamp} />
+                <GPIOPinsDisplay key={pin} pin={pin} state={state} timestamp={timestamp} />
             )}
             <SerialDataDisplay serialData={serialData} timestamp={timestamp} />
         </SectionContent>

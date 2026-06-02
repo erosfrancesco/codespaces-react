@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
+import { Card } from './Layouts';
 
 
 export function LineChartWidget({
@@ -108,7 +109,7 @@ export function LineChartWidget({
     ]);
 
     return (
-        <div className="bg-white rounded-lg p-5 shadow-lg">
+        <Card>
             <div className="text-lg font-semibold text-gray-800 mb-2">
                 {label}
             </div>
@@ -127,6 +128,6 @@ export function LineChartWidget({
                 {data.length > 0 &&
                     `${data.length} data points recorded`}
             </div>
-        </div>
+        </Card>
     );
 }

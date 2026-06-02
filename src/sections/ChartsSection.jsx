@@ -9,7 +9,7 @@ export function ChartsSection({ sensorHistory }) {
     return (
         <div className="mb-8">
             <SectionTitle>📈 Charts</SectionTitle>
-            <SectionContent>
+            <SectionContent className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-3">
                 {sensors.map((sensor, i) => {
                     const { value, ...sensorProps } = sensorHistory[sensor] || {};
                     const chartColor = colorMap[i] || colorMap[0];

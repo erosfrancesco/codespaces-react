@@ -10,7 +10,7 @@ export function SensorsSection({ sensorHistory }) {
     return (
         <div className="mb-8">
             <SectionTitle>📊 Sensors & Data</SectionTitle>
-            <SectionContent>
+            <SectionContent className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-3">
                 {sensors.map(sensor => {
                     const { value, ...sensorProps } = sensorHistory[sensor] || { value: [] };
                     const { min, max, avg } = calcStats(value);

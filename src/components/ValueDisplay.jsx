@@ -1,6 +1,8 @@
+import { Card } from "./Layouts";
+
 export function ValueDisplay({ label, value, unit, min, max, avg }) {
     return (
-        <div className="bg-white rounded-lg p-5 shadow-lg text-center">
+        <Card>
             <div className="text-sm text-gray-600 uppercase tracking-wider mb-4">{label}</div>
             <div className="text-5xl font-bold mb-2 bg-linear-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">{value.toFixed(2)}</div>
             {unit && <div className="text-lg text-gray-500 mt-1">{unit}</div>}
@@ -26,6 +28,6 @@ export function ValueDisplay({ label, value, unit, min, max, avg }) {
                     )}
                 </div>
             )}
-        </div>
+        </Card>
     );
 }
