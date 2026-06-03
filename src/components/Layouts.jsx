@@ -12,11 +12,17 @@ export function SectionTitle({ children, className }) {
 export function SectionContent({ children, className }) {
     const { connected } = useWebSocketConnection();
 
+    if (!connected) {
+        return <div>
+            Connect to SERVER
+        </div>
+    }
+
     return <div className={
         "gap-5"
         + (className ? (" " + className) : "")
     }>
-        {connected ? children : "Connect to SERVER"}
+        {children}
     </div>
 }
 
