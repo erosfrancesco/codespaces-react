@@ -4,7 +4,7 @@ import { Dialog } from "../components/Layouts";
 
 
 // Connection (WebSocket) status and configuration
-export function ConnectionSection({ onData, onError }) {
+export function ConnectionSection() {
     const {
         connected,
         serverUrl,
@@ -12,24 +12,6 @@ export function ConnectionSection({ onData, onError }) {
         setShowConfig,
         ws
     } = useWebSocketConnection();
-
-    useEffect(() => {
-        if (!ws.current) return;
-
-        ws.current.onmessage = event => {
-            try {
-                const data = JSON.parse(event.data);
-                onData(data);
-            } catch (e) {
-                console.error('Error parsing message:', e);
-            }
-        };
-
-        ws.current.onerror = error => {
-            console.error('WebSocket error:', error);
-            onError(error);
-        };
-    }, [ws]); // Re-run effect if WebSocket instance changes
 
     return <div className="text-white mb-8 text-center">
         {/** CONTENT */}
