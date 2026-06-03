@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useWebSocketConnection } from './useWebSocket';
+import React, { createContext, useContext, useState } from 'react';
+import { useWSMessages } from './useWebSocket';
 
 const BoardPinoutContext = createContext(null);
 
@@ -30,33 +30,13 @@ export function useBoardPinoutContext() {
 export function useBoardPinout() {
     const [pins, setPins] = useState({});
 
-    // WS integration
-    const { ws } = useWebSocketConnection();
-
-    useEffect(() => {
-        if (!ws.current) return;
-
-        ws.current.onmessage = event => {
-            try {
-                const data = JSON.parse(event.data);
-
-                if (data.type === 'init' || data.type === 'state') {
-                    if ('gpio' in data) {
-                        setPins(data.gpio);
-                    }
-                }
-
-            } catch (e) {
-                console.error('[USEBOARD] Error parsing message:', e);
+    useWSMessages((data) => {
+        if (data.type === 'init' || data.type === 'state') {
+            if ('gpio' in data) {
+                setPins(data.gpio);
             }
-        };
-
-        ws.current.onerror = error => {
-            console.error('[USEBOARD] WebSocket error:', error);
-        };
-    }, [ws]);
-    //
-
+        }
+    }, (e) => console.error('[BOARD PINOUT]: Error:', e));
 
     return {
         pins, setPins,

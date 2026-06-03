@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 const WebSocketContext = React.createContext(null);
 
@@ -96,7 +96,7 @@ export function useWebSocketConnection() {
     React.useEffect(() => {
         connectWebSocket();
         return () => {
-            if (ws.current) {
+            if (ws.current && ws.current.readyState === 1) {
                 ws.current.close();
             }
         };
@@ -131,4 +131,38 @@ function getServerUrl() {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 
     return protocol; //window.location.hostname:8765
+}
+
+export function useWSMessages(
+    handleMessage = () => { },
+    handleError = () => { }
+) {
+    const { ws } = useWebSocketConnection();
+
+    useEffect(() => {
+        const socket = ws.current;
+
+        if (!socket) return;
+
+        const onMessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                handleMessage(data);
+            } catch (e) {
+                handleError(e);
+            }
+        };
+
+        const onError = (e) => {
+            handleError(e);
+        };
+
+        socket.addEventListener("message", onMessage);
+        socket.addEventListener("error", onError);
+
+        return () => {
+            socket.removeEventListener("message", onMessage);
+            socket.removeEventListener("error", onError);
+        };
+    }, [handleMessage, handleError]);
 }

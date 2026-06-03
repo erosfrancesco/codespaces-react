@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useWebSocketConnection } from './useWebSocket';
+import React, { createContext, useContext, useState } from 'react';
+import { useWSMessages } from './useWebSocket';
 
 const SensorsContext = createContext(null);
 
@@ -52,46 +52,25 @@ export function useSensors() {
         };
     }
 
-
-    // WS integration
-    const { ws } = useWebSocketConnection();
-
-    useEffect(() => {
-        if (!ws.current) return;
-
-        ws.current.onmessage = event => {
-            try {
-                const data = JSON.parse(event.data);
-
-                if (data.type === 'init' || data.type === 'state') {
-                    if ('serial' in data) {
-                        setSerialData(data.serial);
-                    }
-
-                    if (data.timestamp) {
-                        setTimestamp(new Date(data.timestamp).toLocaleTimeString());
-                    }
-
-                    if (data.sensors) {
-                        setSensorHistory((prev) => updateSensors(prev, data));
-                    }
-                }
-            } catch (e) {
-                console.error('[USESENSORS] Error parsing message:', e);
+    useWSMessages((data) => {
+        if (data.type === 'init' || data.type === 'state') {
+            if ('serial' in data) {
+                setSerialData(data.serial);
             }
-        };
 
-        ws.current.onerror = error => {
-            console.error('[USESENSORS] WebSocket error:', error);
-        };
-    }, [ws]);
-    //
+            if (data.timestamp) {
+                setTimestamp(new Date(data.timestamp).toLocaleTimeString());
+            }
 
+            if (data.sensors) {
+                setSensorHistory((prev) => updateSensors(prev, data));
+            }
+        }
+    }, (e) => console.error('[SENSORS]: Error:', e));
 
     return {
         serialData, setSerialData,
         timestamp, setTimestamp,
-        sensorHistory, setSensorHistory,
-        updateSensors
+        sensorHistory, setSensorHistory
     };
 }
