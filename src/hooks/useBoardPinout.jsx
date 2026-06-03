@@ -29,8 +29,20 @@ export function useBoardPinoutContext() {
 // TODO: - use config_store set and get for board management
 export function useBoardPinout() {
     const [pins, setPins] = useState({});
+    const [name, setName] = useState("");
 
     useWSMessages((data) => {
+        if (data.type === 'config') {
+            console.log('got config from ws: ', data);
+            const {
+                device_name,
+                gpio_pins
+            } = data.config;
+
+            setName(device_name);
+            setPins(gpio_pins);
+        }
+
         if (data.type === 'init' || data.type === 'state') {
             if ('gpio' in data) {
                 setPins(data.gpio);
@@ -39,6 +51,6 @@ export function useBoardPinout() {
     }, (e) => console.error('[BOARD PINOUT]: Error:', e));
 
     return {
-        pins, setPins,
+        name, pins
     };
 }

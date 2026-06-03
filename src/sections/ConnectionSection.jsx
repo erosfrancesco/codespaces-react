@@ -1,6 +1,7 @@
 import { useWebSocket } from "../hooks/useWebSocket";
 import { Dialog } from "../components/Layouts";
 import { useEffect, useState } from "react";
+import { useBoardPinout } from "../hooks/useBoardPinout";
 
 
 // Connection (WebSocket) status and configuration
@@ -10,11 +11,13 @@ export function ConnectionSection() {
         connected,
         serverUrl
     } = useWebSocket();
+    const { name } = useBoardPinout();
 
     return <div className="text-white mb-8 text-center">
         {/** CONTENT */}
         <h1 className="text-5xl mb-3">🎛️ Raspberry Pi Dashboard</h1>
         <div className="flex items-center justify-center gap-3 text-lg">
+            <span className="font-bold">{name}</span>
             <div className={`w-3 h-3 rounded-full ${connected ? 'bg-green-400 animate-pulse' : 'bg-red-500'}`}></div>
             <span>{connected ? 'Connected' : 'Disconnected'}</span>
         </div>
