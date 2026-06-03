@@ -1,8 +1,11 @@
 import { LineChartWidget } from "../components/LineChart";
 import { SectionContent, SectionTitle } from "../components/Layouts";
+import { useSensors } from "../hooks/useSensors";
 
 
-export function ChartsSection({ sensorHistory }) {
+export function ChartsSection() {
+    const { sensorHistory } = useSensors();
+
     const sensors = Object.keys(sensorHistory).filter(s => s !== 'timestamps');
     const colorMap = ["#667eea", "#764ba2", "#ff6a00", "#ee0979", "#56ab2f", "#a8e063"];
 

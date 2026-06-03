@@ -1,10 +1,13 @@
 import { calcStats } from "../hooks/utils";
 import { ValueDisplay } from "../components/ValueDisplay";
 import { SectionContent, SectionTitle } from "../components/Layouts";
+import { useSensors } from "../hooks/useSensors";
 
 
 // TODO: - Should use labeled sensors instead of hardcoded temperature/humidity
-export function SensorsSection({ sensorHistory }) {
+export function SensorsSection() {
+    const { sensorHistory } = useSensors();
+
     const sensors = Object.keys(sensorHistory).filter(s => s !== 'timestamps');
 
     return (
