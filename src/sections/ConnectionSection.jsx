@@ -1,17 +1,15 @@
-import { useEffect } from "react";
-import { useWebSocketConnection } from "../hooks/useWebSocket";
+import { useWebSocket } from "../hooks/useWebSocket";
 import { Dialog } from "../components/Layouts";
+import { useEffect, useState } from "react";
 
 
 // Connection (WebSocket) status and configuration
 export function ConnectionSection() {
+    const [showConfig, setShowConfig] = useState();
     const {
         connected,
-        serverUrl,
-        showConfig,
-        setShowConfig,
-        ws
-    } = useWebSocketConnection();
+        serverUrl
+    } = useWebSocket();
 
     return <div className="text-white mb-8 text-center">
         {/** CONTENT */}
@@ -32,69 +30,139 @@ export function ConnectionSection() {
     </div>
 }
 
-function ConnectionOptions({ onClose }) {
+
+export function ConnectionOptions({ onClose }) {
     const {
         connected,
+        status,
         serverUrl,
-        tempUrl,
-        setTempUrl,
-        handleConnect,
-        handlePersistent,
-        handleReset
-    } = useWebSocketConnection();
+        setServerUrl,
+        resetServerUrl,
+        testConnection,
+    } = useWebSocket();
 
-    const handleButtonClick = (action) => {
-        action();
+    const [tempUrl, setTempUrl] = useState(serverUrl || "");
+    const [testing, setTesting] = useState(false);
+    const [testSuccess, setTestSuccess] = useState(false);
+    const [error, setError] = useState("");
+
+    // keep input in sync if global URL changes
+    useEffect(() => {
+        setTempUrl(serverUrl || "");
+    }, [serverUrl]);
+
+    // -----------------------------
+    // CONNECT (real)
+    // -----------------------------
+    function handleConnect() {
+        if (!tempUrl?.trim()) return;
+
+        setServerUrl(tempUrl.trim());
         onClose();
     }
 
-    return <Dialog onClose={onClose}>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Server Configuration</h2>
+    // -----------------------------
+    // RESET
+    // -----------------------------
+    function handleReset() {
+        resetServerUrl();
+        setTempUrl("");
+        setError("");
+    }
 
-        {/** INPUT */}
-        <div className="mb-6">
-            <label htmlFor="server-url" className="block text-sm font-medium text-gray-700 mb-2">WebSocket Server URL</label>
-            <input
-                id="server-url"
-                type="text"
-                value={tempUrl}
-                onChange={e => setTempUrl(e.target.value)}
-                placeholder="ws://192.168.1.100:8765"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-            />
-            <div className="text-sm text-gray-600 mt-1">Format: ws://HOST:PORT or wss://HOST:PORT (SSL)</div>
-        </div>
+    // -----------------------------
+    // TRY CONNECTION (temp socket)
+    // -----------------------------
+    async function handleTryConnection() {
+        if (!tempUrl?.trim()) return;
 
-        {/** STATUS */}
-        <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Current Connection</label>
-            <div className="text-sm text-gray-600 mt-1">
-                Status: {connected ? '✅ Connected' : '❌ Disconnected'}
-                <br />
-                URL: {serverUrl || tempUrl}
+        setTesting(true);
+        setError("");
+
+        try {
+            await testConnection(tempUrl.trim(), 5000);
+
+            // success → apply
+            setServerUrl(tempUrl.trim());
+            setTestSuccess(true);
+        } catch (err) {
+            console.error(err);
+
+            // failure → reset everything (as requested)
+            resetServerUrl();
+            setTempUrl("");
+            setError("Connection failed. URL reset.");
+        } finally {
+            setTesting(false);
+        }
+    }
+
+    return (
+        <Dialog onClose={onClose}>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                Server Configuration
+            </h2>
+
+            {/* INPUT */}
+            <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                    WebSocket Server URL
+                </label>
+
+                <input
+                    type="text"
+                    value={tempUrl}
+                    onChange={(e) => setTempUrl(e.target.value)}
+                    placeholder="ws://192.168.1.100:8765"
+                    className="w-full px-3 py-2 border rounded-lg font-mono"
+                />
+
+                <div className="text-sm text-gray-600 mt-1">
+                    ws://HOST:PORT or wss://HOST:PORT
+                </div>
             </div>
-        </div>
 
-        {/** ACTIONS */}
-        <div className="flex gap-3 mt-8">
-            <button className="flex-1 py-2 px-4 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors"
-                onClick={() => handleButtonClick(handleConnect)}>
-                Connect (Session)
-            </button>
-            <button className="flex-1 py-2 px-4 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
-                onClick={() => handleButtonClick(handlePersistent)}>
-                Save & Connect
-            </button>
-            <button className="flex-1 py-2 px-4 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors"
-                onClick={() => handleButtonClick(handleReset)}>
-                Reset
-            </button>
-            {/*}
-            <button className="flex-1 py-2 px-4 bg-red-200 text-gray-800 rounded-lg font-semibold hover:bg-red-300 transition-colors"
-                onClick={() => handleButtonClick(onClose)}>
-                Close
-            </button>
-            {/** */}
-        </div>
-    </Dialog>
+            {/* STATUS */}
+            <div className="mb-4 text-sm text-gray-700">
+                <div>Global status: {status}</div>
+                <div>Local connected: {connected ? "yes" : "no"}</div>
+                <div>Current URL: {serverUrl || "none"}</div>
+            </div>
+
+            {/* ERROR */}
+            {error && (
+                <div className="mb-4 text-sm text-red-600">
+                    {error}
+                </div>
+            )}
+
+            {/* ACTIONS */}
+            <div className="flex gap-3 mt-8">
+                <button
+                    onClick={handleConnect}
+                    disabled={!tempUrl?.trim() || testing}
+                    className="flex-1 py-2 px-4 bg-blue-500 text-white rounded-lg"
+                >
+                    Connect
+                </button>
+
+                <button
+                    onClick={handleTryConnection}
+                    disabled={!tempUrl?.trim() || testing}
+                    className={"flex-1 py-2 px-4 text-white rounded-lg " + (testSuccess ? "bg-green-500" : testing ? "bg-blue-500" : error ? "bg-red-500" : "bg-green-500")}
+                >
+                    {testing ? "Testing..." : testSuccess ? "Success!" : "Test"}
+
+                </button>
+
+                <button
+                    onClick={handleReset}
+                    className="flex-1 py-2 px-4 bg-red-500 text-white rounded-lg"
+                >
+                    Reset
+                </button>
+            </div>
+        </Dialog>
+    );
 }
+

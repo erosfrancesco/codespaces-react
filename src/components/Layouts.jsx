@@ -1,4 +1,5 @@
-import { useWebSocketConnection } from "../hooks/useWebSocket";
+
+import { useWebSocket } from "../hooks/useWebSocket";
 
 export function SectionTitle({ children, className }) {
     return <div className={
@@ -10,7 +11,7 @@ export function SectionTitle({ children, className }) {
 }
 
 export function SectionContent({ children, className }) {
-    const { connected } = useWebSocketConnection();
+    const { connected } = useWebSocket();
 
     if (!connected) {
         return <div>

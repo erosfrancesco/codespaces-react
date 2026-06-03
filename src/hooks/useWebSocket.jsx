@@ -1,168 +1,204 @@
-import React, { useEffect } from 'react';
+import React, {
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 
-const WebSocketContext = React.createContext(null);
+const WebSocketContext = createContext(null);
+
+function getInitialUrl() {
+    return (
+        localStorage.getItem("ws_server_url") ||
+        sessionStorage.getItem("ws_server_url") ||
+        ""
+    );
+}
 
 export function WebSocketProvider({ children }) {
-    const websocket = useWebSocketConnection();
+    const [serverUrl, setServerUrlState] = useState(getInitialUrl);
+    const [status, setStatus] = useState("disconnected");
+    const [error, setError] = useState("");
+
+    const socketRef = useRef(null);
+    const listenersRef = useRef(new Set());
+
+    // -----------------------------
+    // MAIN CONNECTION
+    // -----------------------------
+    useEffect(() => {
+        if (!serverUrl) {
+            setStatus("disconnected");
+            return;
+        }
+
+        setStatus("connecting");
+
+        const socket = new WebSocket(serverUrl);
+        socketRef.current = socket;
+
+        socket.onopen = () => {
+            setStatus("connected");
+            setError("");
+        };
+
+        socket.onerror = () => {
+            setStatus("error");
+            setError("Connection error");
+        };
+
+        socket.onclose = () => {
+            setStatus("disconnected");
+        };
+
+        socket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+
+                listenersRef.current.forEach((listener) => {
+                    try {
+                        listener(data);
+                    } catch (err) {
+                        console.error("Listener error:", err);
+                    }
+                });
+            } catch (err) {
+                console.error("Parse error:", err);
+            }
+        };
+
+        return () => {
+            socket.close();
+        };
+    }, [serverUrl]);
+
+    // -----------------------------
+    // SEND MESSAGE
+    // -----------------------------
+    const send = useCallback((data) => {
+        const socket = socketRef.current;
+
+        if (socket?.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify(data));
+            return true;
+        }
+
+        return false;
+    }, []);
+
+    // -----------------------------
+    // SUBSCRIBE TO MESSAGES
+    // -----------------------------
+    const subscribe = useCallback((listener) => {
+        listenersRef.current.add(listener);
+
+        return () => {
+            listenersRef.current.delete(listener);
+        };
+    }, []);
+
+    // -----------------------------
+    // SET SERVER URL
+    // -----------------------------
+    const setServerUrl = useCallback((url, persistent = true) => {
+        const trimmed = url.trim();
+        if (!trimmed) return;
+
+        if (persistent) {
+            localStorage.setItem("ws_server_url", trimmed);
+        } else {
+            sessionStorage.setItem("ws_server_url", trimmed);
+        }
+
+        setServerUrlState(trimmed);
+    }, []);
+
+    const resetServerUrl = useCallback(() => {
+        localStorage.removeItem("ws_server_url");
+        sessionStorage.removeItem("ws_server_url");
+        setServerUrlState("");
+    }, []);
+
+    // -----------------------------
+    // TEST CONNECTION (temporary socket)
+    // -----------------------------
+    const testConnection = useCallback((url, timeout = 5000) => {
+        return new Promise((resolve, reject) => {
+            let socket;
+
+            try {
+                socket = new WebSocket(url);
+            } catch (err) {
+                reject(err);
+                return;
+            }
+
+            const timer = setTimeout(() => {
+                socket.close();
+                reject(new Error("Connection timeout"));
+            }, timeout);
+
+            socket.onopen = () => {
+                clearTimeout(timer);
+                socket.close();
+                resolve(true);
+            };
+
+            socket.onerror = () => {
+                clearTimeout(timer);
+                socket.close();
+                reject(new Error("Connection failed"));
+            };
+        });
+    }, []);
+
+    // -----------------------------
+    // CONTEXT VALUE
+    // -----------------------------
+    const value = {
+        serverUrl,
+        setServerUrl,
+        resetServerUrl,
+
+        status,
+        connected: status === "connected",
+        error,
+
+        send,
+        subscribe,
+        testConnection,
+    };
 
     return (
-        <WebSocketContext.Provider value={websocket}>
+        <WebSocketContext.Provider value={value}>
             {children}
         </WebSocketContext.Provider>
     );
 }
 
+// -----------------------------
+// BASE HOOK
+// -----------------------------
 export function useWebSocket() {
-    const context = React.useContext(WebSocketContext);
+    const ctx = useContext(WebSocketContext);
 
-    if (!context) {
-        throw new Error(
-            'useWebSocket must be used within a WebSocketProvider'
-        );
+    if (!ctx) {
+        throw new Error("useWebSocket must be used inside WebSocketProvider");
     }
 
-    return context;
+    return ctx;
 }
 
-export function useWebSocketConnection() {
-    const [connected, setConnected] = React.useState(false);
-    const [lastMessage, setLastMessage] = React.useState(null);
-    const [error, setError] = React.useState('');
-    const [showConfig, setShowConfig] = React.useState(false);
-    const [tempUrl, setTempUrl] = React.useState(getServerUrl());
-    const [serverUrl, setServerUrl] = React.useState(getServerUrl());
-
-    const ws = React.useRef(null);
-
-    function connectWebSocket() {
-        ws.current = new WebSocket(serverUrl);
-
-        ws.current.onopen = () => {
-            setConnected(true);
-            setError('');
-        };
-
-        ws.current.onmessage = event => {
-            try {
-                setLastMessage(JSON.parse(event.data));
-            } catch (e) {
-                console.error(e);
-            }
-        };
-
-        ws.current.onerror = () => {
-            setError('Connection error');
-        };
-
-        ws.current.onclose = () => {
-            setConnected(false);
-        };
-    }
-
-    function send(data) {
-        if (ws.current?.readyState === WebSocket.OPEN) {
-            ws.current.send(JSON.stringify(data));
-        }
-    }
-
-    function handleConnect() {
-        if (!tempUrl.trim()) return;
-
-        sessionStorage.setItem('ws_server_url', tempUrl.trim());
-        setServerUrl(tempUrl.trim());
-        setShowConfig(false);
-    }
-
-    function handlePersistent() {
-        if (!tempUrl.trim()) return;
-
-        localStorage.setItem('ws_server_url_persistent', tempUrl.trim());
-        sessionStorage.setItem('ws_server_url', tempUrl.trim());
-        setServerUrl(tempUrl.trim());
-        setShowConfig(false);
-    }
-
-    function handleReset() {
-        sessionStorage.removeItem('ws_server_url');
-        localStorage.removeItem('ws_server_url_persistent');
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const defaultUrl = protocol;
-
-        setTempUrl(defaultUrl);
-        setServerUrl(defaultUrl);
-        setShowConfig(false);
-    }
-
-    React.useEffect(() => {
-        connectWebSocket();
-        return () => {
-            if (ws.current && ws.current.readyState === 1) {
-                ws.current.close();
-            }
-        };
-    }, [serverUrl]);
-
-    return {
-        connected,
-        lastMessage,
-        send,
-        error,
-        ws,
-
-        connectWebSocket,
-        handleConnect,
-        handlePersistent,
-        handleReset,
-
-        setTempUrl, tempUrl,
-        setShowConfig, showConfig,
-        setError, error
-    };
-}
-
-function getServerUrl() {
-    const stored = sessionStorage.getItem('ws_server_url');
-    if (stored) return stored;
-    const persistent = localStorage.getItem('ws_server_url_persistent');
-    if (persistent) return persistent;
-    const params = new URLSearchParams(window.location.search);
-    const paramUrl = params.get('server');
-    if (paramUrl) return paramUrl;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-
-    return protocol; //window.location.hostname:8765
-}
-
-export function useWSMessages(
-    handleMessage = () => { },
-    handleError = () => { }
-) {
-    const { ws } = useWebSocketConnection();
+// -----------------------------
+// MESSAGE SUBSCRIPTION HOOK
+// -----------------------------
+export function useWSMessages(handler) {
+    const { subscribe } = useWebSocket();
 
     useEffect(() => {
-        const socket = ws.current;
-
-        if (!socket) return;
-
-        const onMessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                handleMessage(data);
-            } catch (e) {
-                handleError(e);
-            }
-        };
-
-        const onError = (e) => {
-            handleError(e);
-        };
-
-        socket.addEventListener("message", onMessage);
-        socket.addEventListener("error", onError);
-
-        return () => {
-            socket.removeEventListener("message", onMessage);
-            socket.removeEventListener("error", onError);
-        };
-    }, [handleMessage, handleError]);
+        if (!handler) return;
+        return subscribe(handler);
+    }, [subscribe, handler]);
 }
