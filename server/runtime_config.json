@@ -9,6 +9,14 @@
     27,
     22
   ],
+  "sensors": [
+    {
+      "name": "Temperature",
+      "pin": 17,
+      "unit": "°C",
+      "enabled": true
+    }
+  ],
   "simulation": {
     "temperature_enabled": true,
     "humidity_enabled": true,
