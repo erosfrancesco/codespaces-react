@@ -32,13 +32,12 @@ export function useSensors() {
     const [availableSensors, setAvailableSensors] = useState([]);
 
     function updateSensors(prev, data) {
-        const timestamps = [...prev.timestamps, data.timestamp].slice(-60);
-
         const sensors = Object.keys(data.sensors);
-        const values = sensors.reduce((acc, sensor) => {
-            const { value, ...props } = data.sensors[sensor];
+
+        return sensors.reduce((acc, sensor) => {
+            const { value, ...configs } = data.sensors[sensor];
             acc[sensor] = prev[sensor] || {
-                ...props,
+                ...configs,
                 value: []
             };
 
@@ -46,9 +45,12 @@ export function useSensors() {
 
             return acc;
         }, {});
+    }
+
+    function updateTimestamps(prev, data) {
+        const timestamps = [...prev.timestamps, data.timestamp].slice(-60);
 
         return {
-            ...values,
             timestamps
         };
     }
@@ -65,7 +67,13 @@ export function useSensors() {
 
             if (data.sensors) {
                 setAvailableSensors(Object.keys(data.sensors));
-                setSensorHistory((prev) => updateSensors(prev, data));
+
+                setSensorHistory((prev) => {
+                    return {
+                        ...updateSensors(prev, data),
+                        ...updateTimestamps(prev, data)
+                    }
+                });
             }
         }
     }, (e) => console.error('[SENSORS]: Error:', e));

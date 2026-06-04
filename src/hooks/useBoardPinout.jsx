@@ -36,8 +36,7 @@ export function useBoardPinout() {
             console.log('got config from ws: ', data);
             const {
                 device_name,
-                gpio_pins,
-                sensors
+                gpio_pins
             } = data.config;
 
             setName(device_name);

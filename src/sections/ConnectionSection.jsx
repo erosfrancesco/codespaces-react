@@ -3,15 +3,12 @@ import { Dialog } from "../components/Layouts";
 import { useEffect, useState } from "react";
 import { useBoardPinout } from "../hooks/useBoardPinout";
 
-// TODO: - Set up proper board name in CTA. Create Board section, with sensors test
+
 
 // Connection (WebSocket) status and configuration
 export function ConnectionSection() {
     const [showConfig, setShowConfig] = useState();
-    const {
-        connected,
-        serverUrl
-    } = useWebSocket();
+    const { connected } = useWebSocket();
     const { name } = useBoardPinout();
 
     return <div className="text-white mb-8 text-center">
@@ -26,7 +23,7 @@ export function ConnectionSection() {
         {/** CTA */}
         <div className="fixed bottom-5 right-5 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg text-sm font-mono cursor-pointer opacity-60 hover:opacity-100 transition-opacity"
             onClick={() => setShowConfig(true)}>
-            🔧 {serverUrl}
+            🔧 {name}
         </div>
 
         {/** Dialog */}

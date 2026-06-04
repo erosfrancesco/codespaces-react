@@ -10,14 +10,6 @@ DEFAULT_CONFIG = {
     "update_interval": 1.0,
     "device_name": "Mock Dashboard",
     "gpio_pins": [17, 18, 27, 22],
-    "sensors": [
-        {
-            "name": "Temperature",
-            "pin": 17,
-            "unit": "°C",
-            "enabled": True
-        }
-    ],
     "simulation": {
         "temperature_enabled": True,
         "humidity_enabled": True,
