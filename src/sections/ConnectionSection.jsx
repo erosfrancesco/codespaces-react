@@ -3,6 +3,7 @@ import { Dialog } from "../components/Layouts";
 import { useEffect, useState } from "react";
 import { useBoardPinout } from "../hooks/useBoardPinout";
 
+// TODO: - Set up proper board name in CTA. Create Board section, with sensors test
 
 // Connection (WebSocket) status and configuration
 export function ConnectionSection() {
@@ -91,10 +92,8 @@ export function ConnectionOptions({ onClose }) {
         } catch (err) {
             console.error(err);
 
-            // failure → reset everything (as requested)
             resetServerUrl();
-            setTempUrl("");
-            setError("Connection failed. URL reset.");
+            setError("Connection failed");
         } finally {
             setTesting(false);
         }

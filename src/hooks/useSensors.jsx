@@ -29,6 +29,7 @@ export function useSensors() {
     const [serialData, setSerialData] = useState('');
     const [timestamp, setTimestamp] = useState('');
     const [sensorHistory, setSensorHistory] = useState({ timestamps: [] });
+    const [availableSensors, setAvailableSensors] = useState([]);
 
     function updateSensors(prev, data) {
         const timestamps = [...prev.timestamps, data.timestamp].slice(-60);
@@ -63,6 +64,7 @@ export function useSensors() {
             }
 
             if (data.sensors) {
+                setAvailableSensors(Object.keys(data.sensors));
                 setSensorHistory((prev) => updateSensors(prev, data));
             }
         }
@@ -71,6 +73,7 @@ export function useSensors() {
     return {
         serialData, setSerialData,
         timestamp, setTimestamp,
-        sensorHistory, setSensorHistory
+        sensorHistory, setSensorHistory,
+        availableSensors
     };
 }
